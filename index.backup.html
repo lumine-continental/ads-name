@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Nomenclaturas</title>
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        :root {
+            /* Paleta Light / Modo Claro */
+            --bg-main: #f4f5f7;
+            --bg-card: #ffffff;
+            --bg-hover: #f9fafb;
+            --primary: #cd001a;
+            --primary-hover: #ff334b;
+            --border-color: #d1d5db; /* Gris claro para bordes */
+            --text-main: #1f2937; /* Gris muy oscuro casi negro */
+            --text-muted: #6b7280; /* Gris medio para etiquetas */
+            --bg-input: #ffffff;
+            
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            --radius-card: 8px;
+            --radius-control: 6px;
+        }
+
+        /* Variables para el modo oscuro (Dark Mode) */
+        [data-theme="dark"] {
+            --bg-main: #111111;
+            --bg-card: #1c1c1c;
+            --bg-hover: #242424;
+            --primary: #cd001a;
+            --primary-hover: #ff334b;
+            --border-color: #333333;
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --bg-input: #111111;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: var(--font-stack);
+            font-size: 13px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-card);
+            /* Sombra más suave para el modo claro */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            padding: 24px;
+            position: relative; /* Agregado para el botón de toggle */
+        }
+
+        /* Ajuste de sombra para tarjeta en modo oscuro */
+        [data-theme="dark"] .card {
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Estilo del Botón de Modo Claro/Oscuro */
+        .theme-toggle {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s, background-color 0.2s;
+        }
+
+        .theme-toggle:hover {
+            color: var(--text-main);
+            background-color: var(--bg-hover);
+        }
+
+        /* Cabecera centrada */
+        .header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .header img {
+            height: 48px; /* Altura ajustada para proporción 401x85 */
+            object-fit: contain;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.hidden {
+            display: none;
+        }
+
+        label {
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select, input[type="text"] {
+            background-color: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-control);
+            height: 34px;
+            padding: 4px 8px;
+            font-family: var(--font-stack);
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            appearance: none;
+            /* Flecha custom en gris oscuro para el modo claro */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            padding-right: 28px;
+        }
+
+        /* Flecha custom más clara para selects en modo oscuro */
+        [data-theme="dark"] select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a0a0a0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        }
+
+        select:focus, input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(205, 0, 26, 0.1);
+        }
+
+        /* Result Section */
+        .result-section {
+            background-color: var(--bg-hover);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-control);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 14px;
+        }
+
+        .result-box {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap; /* Por si la pantalla es muy pequeña */
+        }
+
+        .result-input {
+            flex: 1;
+            min-width: 250px;
+            background-color: var(--bg-card) !important;
+            color: var(--primary) !important;
+            font-weight: 600;
+            cursor: copy;
+            background-image: none !important;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            height: 34px;
+            padding: 0 16px;
+            border-radius: var(--radius-control);
+            border: 1px solid var(--border-color);
+            font-family: var(--font-stack);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button.primary {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        button.primary:hover {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+        }
+
+        button.secondary {
+            background-color: var(--bg-card);
+            color: var(--text-main);
+        }
+
+        button.secondary:hover {
+            background-color: var(--bg-hover);
+            border-color: var(--text-muted);
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--primary);
+            color: var(--text-main);
+            padding: 12px 20px;
+            border-radius: var(--radius-card);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1000;
+            font-weight: 500;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .toast i {
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="card">
+            <!-- Botón para alternar tema -->
+            <button id="themeToggle" class="theme-toggle" title="Cambiar tema oscuro/claro" type="button">
+                <i id="themeIcon" data-feather="moon" width="20" height="20"></i>
+            </button>
+
+            <div class="header">
+                <!-- Logo con fallback en texto por si la imagen falla -->
+                <div id="logoContainer" style="display: flex; flex-direction: column; align-items: center;">
+                    <img src="https://icontinental.edu.pe/wp-content/uploads/2020/07/favico.png" alt="ESC & IC Logo" id="mainLogo" style="height: 36px; object-fit: contain;">
+                    <h1 id="logoFallback" style="display: none; color: var(--primary); font-size: 26px; margin-bottom: 8px; letter-spacing: 1px; font-weight: 800;">ESC <span style="color: var(--text-main);">&</span> IC</h1>
+                </div>
+                <h1>Generador de Nomenclaturas Ads</h1>
+            </div>
+
+            <form id="generatorForm">
+                <div class="form-grid" id="formGrid">
+                    <!-- Los selects se generarán vía JS -->
+                </div>
+
+                <div class="result-section">
+                    <span class="result-title">Nomenclatura Generada</span>
+                    <div class="result-box">
+                        <input type="text" id="resultInput" class="result-input" readonly placeholder="Completa los campos para generar..." title="Haz clic para copiar">
+                        <div class="btn-group">
+                            <button type="button" class="primary" id="btnCopy">
+                                <i data-feather="copy" width="16" height="16"></i> Copiar
+                            </button>
+                            <button type="button" class="secondary" id="btnClear">
+                                <i data-feather="trash-2" width="16" height="16"></i> Limpiar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast de Notificación Dinámico -->
+    <div class="toast" id="toast">
+        <i id="toastIcon" data-feather="check-circle" width="18" height="18"></i>
+        <span id="toastText">¡Copiado al portapapeles exitosamente!</span>
+    </div>
+
+    <script>
+        // Diccionario de Datos
+        const dbOptions = {
+            owner: [
+                { val: 'REVENUE', label: 'REVENUE' },
+                { val: 'INHOUSE', label: 'INHOUSE' }
+            ],
+            businessUnit: [
+                { val: 'IC', label: 'IC - Instituto' },
+                { val: 'EC', label: 'EC - Escuela' }
+            ],
+            period: [
+                { val: '202610', label: '202610' },
+                { val: '202620', label: '202620' },
+                { val: '202630', label: '202630' },
+                { val: '202710', label: '202710' }
+            ],
+            modality: [
+                { val: 'DIS', label: 'Distancia (DIS)' },
+                { val: 'SEMI', label: 'Semipresencial (SEMI)' },
+                { val: 'PRES', label: 'Presencial (PRES)' }
+            ],
+            adNature: [
+                { val: 'CONVERSIONES', label: 'Conversiones (Leads)' },
+                { val: 'INTERACCIONES', label: 'Interacciones (WhatsApp)' }
+            ],
+            conversionType: [
+                { val: 'LINK_ADS', label: 'Link Ads (Landing)' },
+                { val: 'LEAD_ADS', label: 'Lead Ads (Nativos)' }
+            ],
+            socialNetwork: [
+                { val: 'TIKTOK', label: 'TikTok' },
+                { val: 'META', label: 'Meta' },
+                { val: 'GOOGLE', label: 'Google' }
+            ],
+            version: Array.from({length: 10}, (_, i) => ({ val: `V${i+1}`, label: `Versión ${i+1} (V${i+1})` }))
+        };
+
+        const formStructure = [
+            { id: 'sel_owner', key: 'owner', label: 'Owner' },
+            { id: 'sel_unit', key: 'businessUnit', label: 'Unidad de Negocio' },
+            { id: 'sel_period', key: 'period', label: 'Periodo' },
+            { id: 'sel_modality', key: 'modality', label: 'Modalidad' },
+            { id: 'sel_nature', key: 'adNature', label: 'Naturaleza' },
+            { id: 'sel_type', key: 'conversionType', label: 'Tipo de Conversión' },
+            { id: 'sel_social', key: 'socialNetwork', label: 'Red Social', hidden: true },
+            { id: 'sel_version', key: 'version', label: 'Versión' }
+        ];
+
+        // Estado global para saber si el formulario está totalmente lleno
+        let isFormComplete = false;
+
+        // Sistema de Tema (Dark/Light) y Logo Fallback
+        const htmlElement = document.documentElement;
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const mainLogo = document.getElementById('mainLogo');
+        const logoFallback = document.getElementById('logoFallback');
+
+        // Si la imagen no se encuentra, mostrar un logo en texto automáticamente
+        mainLogo.addEventListener('error', function() {
+            this.style.display = 'none';
+            logoFallback.style.display = 'block';
+        });
+
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                htmlElement.setAttribute('data-theme', 'dark');
+                themeIcon.setAttribute('data-feather', 'sun');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                htmlElement.removeAttribute('data-theme');
+                themeIcon.setAttribute('data-feather', 'moon');
+                localStorage.setItem('theme', 'light');
+            }
+            if (window.feather) feather.replace();
+        }
+
+        // Cargar preferencia de tema (o usar el del sistema si es la primera vez)
+        const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        setTheme(savedTheme);
+
+        // Evento click para alternar
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = htmlElement.getAttribute('data-theme');
+            setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            feather.replace();
+            buildForm();
+            attachEvents();
+        });
+
+        function buildForm() {
+            const grid = document.getElementById('formGrid');
+            
+            formStructure.forEach(field => {
+                const group = document.createElement('div');
+                group.className = `form-group ${field.hidden ? 'hidden' : ''}`;
+                group.id = `group_${field.id}`;
+                
+                const label = document.createElement('label');
+                label.setAttribute('for', field.id);
+                label.textContent = field.label;
+
+                const select = document.createElement('select');
+                select.id = field.id;
+                
+                const defaultOpt = document.createElement('option');
+                defaultOpt.value = "";
+                defaultOpt.textContent = "Seleccionar...";
+                defaultOpt.selected = true;
+                defaultOpt.disabled = true;
+                select.appendChild(defaultOpt);
+
+                dbOptions[field.key].forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt.val;
+                    option.textContent = opt.label;
+                    select.appendChild(option);
+                });
+
+                group.appendChild(label);
+                group.appendChild(select);
+                grid.appendChild(group);
+            });
+        }
+
+        function attachEvents() {
+            const selects = document.querySelectorAll('select');
+            const resultInput = document.getElementById('resultInput');
+            
+            selects.forEach(select => {
+                select.addEventListener('change', (e) => {
+                    if(e.target.id === 'sel_type') {
+                        const socialGroup = document.getElementById('group_sel_social');
+                        const socialSelect = document.getElementById('sel_social');
+                        if(e.target.value === 'LEAD_ADS') {
+                            socialGroup.classList.remove('hidden');
+                        } else {
+                            socialGroup.classList.add('hidden');
+                            socialSelect.value = ""; 
+                        }
+                    }
+                    generateName();
+                });
+            });
+
+            document.getElementById('btnCopy').addEventListener('click', copyToClipboardManual);
+            document.getElementById('btnClear').addEventListener('click', resetForm);
+            resultInput.addEventListener('click', copyToClipboardManual);
+        }
+
+        function generateName() {
+            let isComplete = true;
+            let parts = [];
+
+            formStructure.forEach(field => {
+                const select = document.getElementById(field.id);
+                const group = document.getElementById(`group_${field.id}`);
+                
+                // Evaluar completitud solo de los campos visibles
+                if (!group.classList.contains('hidden')) {
+                    if (select.value === "") {
+                        isComplete = false;
+                    } else {
+                        parts.push(select.value);
+                    }
+                }
+            });
+
+            // Actualizar estado global
+            isFormComplete = isComplete;
+            const resultInput = document.getElementById('resultInput');
+            
+            // Solo imprimir y copiar si TODOS los campos requeridos están completos
+            if (isFormComplete && parts.length > 0) {
+                resultInput.value = parts.join('_');
+                copyToClipboard(resultInput.value);
+            } else {
+                // Mantener el input vacío si aún faltan campos por llenar
+                resultInput.value = "";
+            }
+        }
+
+        function copyToClipboardManual() {
+            // Si el usuario da clic al botón copiar pero no ha llenado todo, lanzamos alerta de advertencia.
+            if (!isFormComplete) {
+                showToast("Por favor, completa todos los campos requeridos.", true);
+                return;
+            }
+
+            const text = document.getElementById('resultInput').value;
+            if (text) copyToClipboard(text);
+        }
+
+        function copyToClipboard(text) {
+            if(navigator.clipboard) {
+                 navigator.clipboard.writeText(text).then(() => {
+                    showToast("¡Copiado al portapapeles exitosamente!", false);
+                }).catch(err => {
+                    console.error('Error al copiar: ', err);
+                    fallbackCopyTextToClipboard(text);
+                });
+            } else {
+                fallbackCopyTextToClipboard(text);
+            }
+        }
+
+        function fallbackCopyTextToClipboard(text) {
+             const resultInput = document.getElementById('resultInput');
+             resultInput.select();
+             try {
+                 document.execCommand('copy');
+                 showToast("¡Copiado al portapapeles exitosamente!", false);
+             } catch (err) {
+                 console.error('Fallback: Error al copiar', err);
+             }
+        }
+
+        let toastTimeout;
+        // Función de Toast Dinámica (maneja errores y éxitos)
+        function showToast(message, isWarning = false) {
+            const toast = document.getElementById('toast');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastText = document.getElementById('toastText');
+            
+            toastText.textContent = message;
+            
+            if (isWarning) {
+                toast.style.borderColor = '#eab308'; // Amarillo/Naranja de advertencia
+                toastIcon.setAttribute('data-feather', 'alert-circle');
+                toastIcon.style.color = '#eab308';
+            } else {
+                toast.style.borderColor = 'var(--primary)';
+                toastIcon.setAttribute('data-feather', 'check-circle');
+                toastIcon.style.color = 'var(--primary)';
+            }
+            
+            feather.replace(); // Refrescar el icono
+            toast.classList.add('show');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function resetForm() {
+            const selects = document.querySelectorAll('select');
+            selects.forEach(select => {
+                select.value = "";
+            });
+            document.getElementById('group_sel_social').classList.add('hidden');
+            document.getElementById('resultInput').value = "";
+            isFormComplete = false;
+        }
+    </script>
+</body>
+</html>
