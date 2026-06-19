@@ -353,16 +353,29 @@
                 { val: 'PRES', label: 'Presencial (PRES)' }
             ],
             adNature: [
-                { val: 'CONVERSIONES', label: 'Conversiones (Leads)' },
-                { val: 'INTERACCIONES', label: 'Interacciones (WhatsApp)' }
+                { val: 'CONVERSACIONES', label: 'Conversaciones' },
+                { val: 'AWARENESS', label: 'Awareness' },
+                { val: 'CONVERSIONES', label: 'Conversiones' }
             ],
-            conversionType: [
-                { val: 'LINK_ADS', label: 'Link Ads (Landing)' },
-                { val: 'LEAD_ADS', label: 'Lead Ads (Nativos)' }
-            ],
+            conversionType: {
+                'CONVERSACIONES': [
+                    { val: 'WHATSAPP', label: 'WhatsApp' },
+                    { val: 'RED_SOCIAL', label: 'Red Social' }
+                ],
+                'AWARENESS': [
+                    { val: 'REACCIONES', label: 'Reacciones' },
+                    { val: 'IMPRESIONES', label: 'Impresiones' },
+                    { val: 'VIDEO_VIEWS', label: 'Visualizaciones de video' }
+                ],
+                'CONVERSIONES': [
+                    { val: 'LINK_ADS', label: 'Link ads' },
+                    { val: 'LEAD_ADS', label: 'Lead Ads' },
+                    { val: 'TRAFICO', label: 'Tráfico' }
+                ]
+            },
             socialNetwork: [
                 { val: 'TIKTOK', label: 'TikTok' },
-                { val: 'META', label: 'Meta' },
+                { val: 'FACEBOOK', label: 'Facebook' },
                 { val: 'GOOGLE', label: 'Google' }
             ],
             version: Array.from({length: 10}, (_, i) => ({ val: `V${i+1}`, label: `Versión ${i+1} (V${i+1})` }))
@@ -374,7 +387,7 @@
             { id: 'sel_period', key: 'period', label: 'Periodo' },
             { id: 'sel_modality', key: 'modality', label: 'Modalidad' },
             { id: 'sel_nature', key: 'adNature', label: 'Naturaleza' },
-            { id: 'sel_type', key: 'conversionType', label: 'Tipo de Conversión' },
+            { id: 'sel_type', key: 'conversionType', label: 'Tipo de Conversión', dynamic: true },
             { id: 'sel_social', key: 'socialNetwork', label: 'Red Social', hidden: true },
             { id: 'sel_version', key: 'version', label: 'Versión' }
         ];
@@ -446,12 +459,14 @@
                 defaultOpt.disabled = true;
                 select.appendChild(defaultOpt);
 
-                dbOptions[field.key].forEach(opt => {
-                    const option = document.createElement('option');
-                    option.value = opt.val;
-                    option.textContent = opt.label;
-                    select.appendChild(option);
-                });
+                if (!field.dynamic && dbOptions[field.key]) {
+                    dbOptions[field.key].forEach(opt => {
+                        const option = document.createElement('option');
+                        option.value = opt.val;
+                        option.textContent = opt.label;
+                        select.appendChild(option);
+                    });
+                }
 
                 group.appendChild(label);
                 group.appendChild(select);
@@ -462,21 +477,47 @@
         function attachEvents() {
             const selects = document.querySelectorAll('select');
             const resultInput = document.getElementById('resultInput');
+            const natureSelect = document.getElementById('sel_nature');
+            const typeSelect = document.getElementById('sel_type');
+            const socialGroup = document.getElementById('group_sel_social');
+            const socialSelect = document.getElementById('sel_social');
             
+            natureSelect.addEventListener('change', (e) => {
+                const val = e.target.value;
+                // Limpiar Tipo de Conversión
+                typeSelect.innerHTML = '<option value="" disabled selected>Seleccionar...</option>';
+                if (dbOptions.conversionType[val]) {
+                    dbOptions.conversionType[val].forEach(opt => {
+                        const option = document.createElement('option');
+                        option.value = opt.val;
+                        option.textContent = opt.label;
+                        typeSelect.appendChild(option);
+                    });
+                }
+                // Limpiar y ocultar Red Social al cambiar Naturaleza
+                socialGroup.classList.add('hidden');
+                socialSelect.value = "";
+                generateName();
+            });
+
+            typeSelect.addEventListener('change', (e) => {
+                const natureVal = natureSelect.value;
+                const typeVal = e.target.value;
+                
+                if ((natureVal === 'CONVERSACIONES' && typeVal === 'RED_SOCIAL') || 
+                    (natureVal === 'CONVERSIONES' && typeVal === 'LEAD_ADS')) {
+                    socialGroup.classList.remove('hidden');
+                } else {
+                    socialGroup.classList.add('hidden');
+                    socialSelect.value = "";
+                }
+                generateName();
+            });
+
             selects.forEach(select => {
-                select.addEventListener('change', (e) => {
-                    if(e.target.id === 'sel_type') {
-                        const socialGroup = document.getElementById('group_sel_social');
-                        const socialSelect = document.getElementById('sel_social');
-                        if(e.target.value === 'LEAD_ADS') {
-                            socialGroup.classList.remove('hidden');
-                        } else {
-                            socialGroup.classList.add('hidden');
-                            socialSelect.value = ""; 
-                        }
-                    }
-                    generateName();
-                });
+                if (select.id !== 'sel_nature' && select.id !== 'sel_type') {
+                    select.addEventListener('change', generateName);
+                }
             });
 
             document.getElementById('btnCopy').addEventListener('click', copyToClipboardManual);
@@ -584,6 +625,7 @@
             selects.forEach(select => {
                 select.value = "";
             });
+            document.getElementById('sel_type').innerHTML = '<option value="" disabled selected>Seleccionar...</option>';
             document.getElementById('group_sel_social').classList.add('hidden');
             document.getElementById('resultInput').value = "";
             isFormComplete = false;
