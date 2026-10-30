@@ -157,6 +157,9 @@
             font-size: 13px;
             outline: none;
             transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        select {
             appearance: none;
             /* Flecha custom en gris oscuro para el modo claro */
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
@@ -170,9 +173,47 @@
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a0a0a0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
         }
 
+        select:disabled {
+            opacity: 0.8;
+            cursor: not-allowed;
+            background-color: var(--bg-hover);
+        }
+
         select:focus, input[type="text"]:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 2px rgba(205, 0, 26, 0.1);
+        }
+
+        /* Estilo del Control de Checkbox */
+        .checkbox-control {
+            height: 34px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-control);
+            padding: 4px 10px;
+            cursor: pointer;
+            user-select: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .checkbox-control:hover {
+            border-color: var(--text-muted);
+        }
+
+        .checkbox-control input[type="checkbox"] {
+            accent-color: var(--primary);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .checkbox-control span {
+            font-size: 13px;
+            color: var(--text-main);
+            font-weight: 500;
         }
 
         /* Result Section */
@@ -353,30 +394,44 @@
                 { val: 'PRES', label: 'Presencial (PRES)' }
             ],
             adNature: [
-                { val: 'CONVERSIONES', label: 'Conversiones (Leads)' },
-                { val: 'INTERACCIONES', label: 'Interacciones (WhatsApp)' }
+                { val: 'CONVERSACIONES', label: 'Conversaciones' },
+                { val: 'AWARENESS', label: 'Awareness' },
+                { val: 'CONVERSIONES', label: 'Conversiones' }
             ],
-            conversionType: [
-                { val: 'LINK_ADS', label: 'Link Ads (Landing)' },
-                { val: 'LEAD_ADS', label: 'Lead Ads (Nativos)' }
-            ],
+            conversionType: {
+                'CONVERSACIONES': [
+                    { val: 'WHATSAPP', label: 'WhatsApp' },
+                    { val: 'RED_SOCIAL', label: 'Red Social' }
+                ],
+                'AWARENESS': [
+                    { val: 'IMPRESIONES', label: 'Impresiones' },
+                    { val: 'VIDEO_VIEWS', label: 'Visualizaciones de video' }
+                ],
+                'CONVERSIONES': [
+                    { val: 'LINK_ADS', label: 'Link ads' },
+                    { val: 'LEAD_ADS', label: 'Lead Ads' },
+                    { val: 'TRAFICO', label: 'Tráfico' }
+                ]
+            },
             socialNetwork: [
                 { val: 'TIKTOK', label: 'TikTok' },
-                { val: 'META', label: 'Meta' },
-                { val: 'GOOGLE', label: 'Google' }
+                { val: 'FACEBOOK', label: 'Facebook' }
             ],
             version: Array.from({length: 10}, (_, i) => ({ val: `V${i+1}`, label: `Versión ${i+1} (V${i+1})` }))
         };
 
         const formStructure = [
-            { id: 'sel_owner', key: 'owner', label: 'Owner' },
-            { id: 'sel_unit', key: 'businessUnit', label: 'Unidad de Negocio' },
-            { id: 'sel_period', key: 'period', label: 'Periodo' },
-            { id: 'sel_modality', key: 'modality', label: 'Modalidad' },
-            { id: 'sel_nature', key: 'adNature', label: 'Naturaleza' },
-            { id: 'sel_type', key: 'conversionType', label: 'Tipo de Conversión' },
-            { id: 'sel_social', key: 'socialNetwork', label: 'Red Social', hidden: true },
-            { id: 'sel_version', key: 'version', label: 'Versión' }
+            { id: 'sel_owner', type: 'select', key: 'owner', label: 'Owner' },
+            { id: 'sel_unit', type: 'select', key: 'businessUnit', label: 'Unidad de Negocio' },
+            { id: 'chk_event', type: 'checkbox', label: '¿Es un evento?' },
+            { id: 'sel_event', type: 'select', label: 'Evento', disabled: true, hidden: true, defaultValue: 'EVENTO' },
+            { id: 'sel_period', type: 'select', key: 'period', label: 'Periodo' },
+            { id: 'sel_modality', type: 'select', key: 'modality', label: 'Modalidad' },
+            { id: 'sel_nature', type: 'select', key: 'adNature', label: 'Naturaleza' },
+            { id: 'sel_type', type: 'select', key: 'conversionType', label: 'Tipo de Conversión', dynamic: true },
+            { id: 'sel_social', type: 'select', key: 'socialNetwork', label: 'Red Social', hidden: true },
+            { id: 'txt_campaign', type: 'text', label: 'Nombre de Campaña', maxlength: 50, placeholder: 'Ej. Cyber Days' },
+            { id: 'sel_version', type: 'select', key: 'version', label: 'Versión' }
         ];
 
         // Estado global para saber si el formulario está totalmente lleno
@@ -426,6 +481,7 @@
 
         function buildForm() {
             const grid = document.getElementById('formGrid');
+            grid.innerHTML = '';
             
             formStructure.forEach(field => {
                 const group = document.createElement('div');
@@ -435,26 +491,62 @@
                 const label = document.createElement('label');
                 label.setAttribute('for', field.id);
                 label.textContent = field.label;
-
-                const select = document.createElement('select');
-                select.id = field.id;
-                
-                const defaultOpt = document.createElement('option');
-                defaultOpt.value = "";
-                defaultOpt.textContent = "Seleccionar...";
-                defaultOpt.selected = true;
-                defaultOpt.disabled = true;
-                select.appendChild(defaultOpt);
-
-                dbOptions[field.key].forEach(opt => {
-                    const option = document.createElement('option');
-                    option.value = opt.val;
-                    option.textContent = opt.label;
-                    select.appendChild(option);
-                });
-
                 group.appendChild(label);
-                group.appendChild(select);
+
+                if (field.type === 'checkbox') {
+                    const control = document.createElement('label');
+                    control.className = 'checkbox-control';
+                    control.setAttribute('for', field.id);
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = field.id;
+                    
+                    const span = document.createElement('span');
+                    span.textContent = 'Sí';
+
+                    control.appendChild(checkbox);
+                    control.appendChild(span);
+                    group.appendChild(control);
+                } else if (field.type === 'text') {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.id = field.id;
+                    if (field.maxlength) input.maxLength = field.maxlength;
+                    if (field.placeholder) input.placeholder = field.placeholder;
+                    group.appendChild(input);
+                } else {
+                    const select = document.createElement('select');
+                    select.id = field.id;
+                    if (field.disabled) select.disabled = true;
+
+                    if (field.defaultValue) {
+                        const opt = document.createElement('option');
+                        opt.value = field.defaultValue;
+                        opt.textContent = field.defaultValue;
+                        opt.selected = true;
+                        select.appendChild(opt);
+                    } else {
+                        const defaultOpt = document.createElement('option');
+                        defaultOpt.value = "";
+                        defaultOpt.textContent = "Seleccionar...";
+                        defaultOpt.selected = true;
+                        defaultOpt.disabled = true;
+                        select.appendChild(defaultOpt);
+
+                        if (!field.dynamic && dbOptions[field.key]) {
+                            dbOptions[field.key].forEach(opt => {
+                                const option = document.createElement('option');
+                                option.value = opt.val;
+                                option.textContent = opt.label;
+                                select.appendChild(option);
+                            });
+                        }
+                    }
+
+                    group.appendChild(select);
+                }
+
                 grid.appendChild(group);
             });
         }
@@ -462,21 +554,72 @@
         function attachEvents() {
             const selects = document.querySelectorAll('select');
             const resultInput = document.getElementById('resultInput');
-            
-            selects.forEach(select => {
-                select.addEventListener('change', (e) => {
-                    if(e.target.id === 'sel_type') {
-                        const socialGroup = document.getElementById('group_sel_social');
-                        const socialSelect = document.getElementById('sel_social');
-                        if(e.target.value === 'LEAD_ADS') {
-                            socialGroup.classList.remove('hidden');
-                        } else {
-                            socialGroup.classList.add('hidden');
-                            socialSelect.value = ""; 
-                        }
+            const natureSelect = document.getElementById('sel_nature');
+            const typeSelect = document.getElementById('sel_type');
+            const socialGroup = document.getElementById('group_sel_social');
+            const socialSelect = document.getElementById('sel_social');
+            const eventCheckbox = document.getElementById('chk_event');
+            const eventGroup = document.getElementById('group_sel_event');
+            const campaignInput = document.getElementById('txt_campaign');
+
+            // Evento para checkbox "¿Es un evento?"
+            if (eventCheckbox) {
+                eventCheckbox.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        eventGroup.classList.remove('hidden');
+                    } else {
+                        eventGroup.classList.add('hidden');
                     }
-                    generateName();
+                    generateName(true);
                 });
+            }
+
+            // Eventos para Nombre de Campaña
+            if (campaignInput) {
+                campaignInput.addEventListener('input', () => {
+                    generateName(false);
+                });
+                campaignInput.addEventListener('change', () => {
+                    generateName(true);
+                });
+            }
+            
+            natureSelect.addEventListener('change', (e) => {
+                const val = e.target.value;
+                // Limpiar Tipo de Conversión
+                typeSelect.innerHTML = '<option value="" disabled selected>Seleccionar...</option>';
+                if (dbOptions.conversionType[val]) {
+                    dbOptions.conversionType[val].forEach(opt => {
+                        const option = document.createElement('option');
+                        option.value = opt.val;
+                        option.textContent = opt.label;
+                        typeSelect.appendChild(option);
+                    });
+                }
+                // Limpiar y ocultar Red Social al cambiar Naturaleza
+                socialGroup.classList.add('hidden');
+                socialSelect.value = "";
+                generateName(true);
+            });
+
+            typeSelect.addEventListener('change', (e) => {
+                const natureVal = natureSelect.value;
+                const typeVal = e.target.value;
+                
+                if ((natureVal === 'CONVERSACIONES' && typeVal === 'RED_SOCIAL') || 
+                    (natureVal === 'CONVERSIONES' && typeVal === 'LEAD_ADS')) {
+                    socialGroup.classList.remove('hidden');
+                } else {
+                    socialGroup.classList.add('hidden');
+                    socialSelect.value = "";
+                }
+                generateName(true);
+            });
+
+            selects.forEach(select => {
+                if (select.id !== 'sel_nature' && select.id !== 'sel_type') {
+                    select.addEventListener('change', () => generateName(true));
+                }
             });
 
             document.getElementById('btnCopy').addEventListener('click', copyToClipboardManual);
@@ -484,20 +627,27 @@
             resultInput.addEventListener('click', copyToClipboardManual);
         }
 
-        function generateName() {
+        function generateName(shouldCopy = true) {
             let isComplete = true;
             let parts = [];
 
             formStructure.forEach(field => {
-                const select = document.getElementById(field.id);
                 const group = document.getElementById(`group_${field.id}`);
                 
                 // Evaluar completitud solo de los campos visibles
                 if (!group.classList.contains('hidden')) {
-                    if (select.value === "") {
+                    if (field.type === 'checkbox') {
+                        // El checkbox controla la visibilidad de sel_event
+                        return;
+                    }
+
+                    const el = document.getElementById(field.id);
+                    const val = el ? el.value.trim() : "";
+                    
+                    if (val === "") {
                         isComplete = false;
                     } else {
-                        parts.push(select.value);
+                        parts.push(val);
                     }
                 }
             });
@@ -509,7 +659,9 @@
             // Solo imprimir y copiar si TODOS los campos requeridos están completos
             if (isFormComplete && parts.length > 0) {
                 resultInput.value = parts.join('_');
-                copyToClipboard(resultInput.value);
+                if (shouldCopy) {
+                    copyToClipboard(resultInput.value);
+                }
             } else {
                 // Mantener el input vacío si aún faltan campos por llenar
                 resultInput.value = "";
@@ -582,9 +734,23 @@
         function resetForm() {
             const selects = document.querySelectorAll('select');
             selects.forEach(select => {
-                select.value = "";
+                if (select.id === 'sel_event') {
+                    select.value = "EVENTO";
+                } else {
+                    select.value = "";
+                }
             });
+            document.getElementById('sel_type').innerHTML = '<option value="" disabled selected>Seleccionar...</option>';
             document.getElementById('group_sel_social').classList.add('hidden');
+
+            const eventCheckbox = document.getElementById('chk_event');
+            if (eventCheckbox) eventCheckbox.checked = false;
+            const eventGroup = document.getElementById('group_sel_event');
+            if (eventGroup) eventGroup.classList.add('hidden');
+
+            const campaignInput = document.getElementById('txt_campaign');
+            if (campaignInput) campaignInput.value = "";
+
             document.getElementById('resultInput').value = "";
             isFormComplete = false;
         }
